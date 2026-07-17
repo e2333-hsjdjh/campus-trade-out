@@ -10,21 +10,15 @@ Page({
   },
 
   async loadItems() {
-    const openid = app.globalData.openid;
-    if (!openid) {
+    if (!app.isLoggedIn()) {
       wx.showToast({ title: '未登录', icon: 'none' });
       return;
     }
 
     wx.showLoading({ title: '加载中' });
     try {
-      const db = wx.cloud.database();
-      const _ = db.command;
-      const res = await db.collection('items')
-        .where({ _openid: _.eq(openid) })
-        .orderBy('createTime', 'desc')
-        .get();
-      this.setData({ items: res.data });
+      const res = await wx.cloud.callFunction({ name: 'getMyItems' });
+      this.setData({ items: res.result.items });
     } catch (err) {
       console.error('加载我的发布失败:', err);
       wx.showToast({ title: '加载失败，请检查权限', icon: 'none' });

@@ -3,7 +3,8 @@ const app = getApp();
 Page({
   data: {
     item: null,
-    seller: null
+    seller: null,
+    canContact: false
   },
 
   onLoad(options) {
@@ -22,8 +23,14 @@ Page({
       });
       const item = res.result.item;
       const seller = res.result.seller;
+      const createdAt = new Date(item.createTime);
+      item.createTimeFormat = `${createdAt.getFullYear()}.${String(createdAt.getMonth() + 1).padStart(2, '0')}.${String(createdAt.getDate()).padStart(2, '0')}`;
 
-      this.setData({ item, seller });
+      this.setData({
+        item,
+        seller,
+        canContact: item._openid !== app.globalData.openid
+      });
       wx.hideLoading();
     } catch (err) {
       wx.hideLoading();

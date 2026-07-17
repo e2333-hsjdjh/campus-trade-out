@@ -76,6 +76,27 @@ Page({
     this.setData({ nickName: e.detail.value });
   },
 
+  async loginWithPhoneNumber(e) {
+    const phoneCode = e.detail && e.detail.code;
+    if (!phoneCode) {
+      wx.showToast({ title: '未授权手机号，可使用昵称登录', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '登录中...' });
+    try {
+      await this.completeLogin({
+        schoolId: this.data.selectedSchoolId,
+        phoneCode
+      });
+    } catch (err) {
+      console.error('手机号登录失败', err);
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
   async doLogin() {
     const { selectedSchoolId, nickName, avatarUrl } = this.data;
     if (!nickName.trim()) {
@@ -86,27 +107,24 @@ Page({
     wx.showLoading({ title: '登录中...' });
 
     try {
-      const res = await wx.cloud.callFunction({
-        name: 'login',
-        data: {
-          schoolId: selectedSchoolId,
-          nickName: nickName.trim(),
-          avatarUrl: avatarUrl
-        }
+      await this.completeLogin({
+        schoolId: selectedSchoolId,
+        nickName: nickName.trim(),
+        avatarUrl
       });
-
-      const { openid, user } = res.result;
-      // 保存登录状态到全局和本地缓存
-      app.saveLoginState(openid, user);
-
-      wx.hideLoading();
-      wx.showToast({ title: '登录成功', icon: 'success' });
-      wx.switchTab({ url: '/pages/index/index' });
-
     } catch (err) {
-      wx.hideLoading();
       console.error('登录失败', err);
-      wx.showToast({ title: '登录失败，请重试', icon: 'error' });
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' });
+    } finally {
+      wx.hideLoading();
     }
+  },
+
+  async completeLogin(data) {
+    const res = await wx.cloud.callFunction({ name: 'login', data });
+    const { openid, user } = res.result;
+    app.saveLoginState(openid, user);
+    wx.showToast({ title: '登录成功', icon: 'success' });
+    wx.switchTab({ url: '/pages/index/index' });
   }
 });

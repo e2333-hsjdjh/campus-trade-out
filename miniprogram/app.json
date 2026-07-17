@@ -13,14 +13,15 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "校园二手",
+    "navigationBarBackgroundColor": "#f7f4ee",
+    "navigationBarTitleText": "校内集市",
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#07c160",
-    "backgroundColor": "#ffffff",
+    "color": "#7d897f",
+    "selectedColor": "#244f40",
+    "backgroundColor": "#fffdf9",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",

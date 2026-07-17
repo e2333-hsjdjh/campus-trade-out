@@ -3,7 +3,8 @@ const app = getApp();
 Page({
   data: {
     keyword: '',
-    items: []
+    items: [],
+    searched: false
   },
 
   onInput(e) {
@@ -20,9 +21,10 @@ Page({
         name: 'getItems',
         data: { keyword, skip: 0, limit: 20 }
       });
-      this.setData({ items: res.result.items });
+      this.setData({ items: res.result.items, searched: true });
     } catch (err) {
       console.error('搜索失败', err);
+      this.setData({ searched: true });
       wx.showToast({ title: '搜索失败', icon: 'none' });
     }
     wx.hideLoading();

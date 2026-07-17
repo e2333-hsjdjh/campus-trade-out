@@ -1,10 +1,19 @@
 <view class="container">
-  <view class="header">
-    <view class="header-top">
-      <text class="welcome">{{greeting}}，{{nickName}}</text>
-      <text class="search-icon" bindtap="goSearch">🔍</text>
+  <view class="hero">
+    <view class="hero-top">
+      <view>
+        <text class="eyebrow">CAMPUS FLEA MARKET</text>
+        <text class="welcome">{{greeting}}，{{nickName}}</text>
+      </view>
+      <view class="search-orb pressable" bindtap="goSearch">
+        <text>⌕</text>
+      </view>
     </view>
-    <text class="school">📍 {{schoolName}}</text>
+    <view class="campus-pill"><text class="campus-dot"></text><text>{{schoolName}} · 只看熟人圈</text></view>
+    <view class="hero-copy">
+      <text class="hero-title">让好物，继续在校园里流转。</text>
+      <text class="hero-note">淘一本书，也认识一个有趣的人。</text>
+    </view>
   </view>
 
   <scroll-view
@@ -16,9 +25,13 @@
     refresher-triggered="{{refreshing}}"
     bindrefresherrefresh="onRefresh"
   >
+    <view class="list-heading" wx:if="{{items.length > 0}}">
+      <view><text class="section-title">正在流转</text><text class="section-subtitle">本校同学的闲置好物</text></view>
+      <view class="refresh-link pressable" bindtap="onRefresh">换一批</view>
+    </view>
     <block wx:if="{{items.length > 0}}">
       <view
-        class="card item-card"
+        class="item-card pressable"
         wx:for="{{items}}"
         wx:key="_id"
         bindtap="goDetail"
@@ -26,18 +39,19 @@
       >
         <image src="{{item.images[0] || ''}}" mode="aspectFill" class="item-img" />
         <view class="item-info">
+          <view class="item-meta-row"><text class="item-tag">{{item.category}}</text><text class="item-time">{{item.createTimeFormat}}</text></view>
           <text class="item-title">{{item.title}}</text>
           <text class="item-price">¥{{item.price}}</text>
-          <text class="item-meta">{{item.category}} · {{item.condition}}</text>
-          <text class="item-time">{{item.createTimeFormat}}</text>
+          <text class="item-meta">{{item.condition}} · 同校自取优先</text>
         </view>
       </view>
     </block>
 
     <view wx:if="{{!loading && items.length === 0}}" class="empty">
-      <text class="empty-icon">📦</text>
-      <text class="empty-text">本校还没有商品，快去发布吧！</text>
-      <button class="btn-primary go-publish" bindtap="goPublish">去发布</button>
+      <view class="empty-mark">✦</view>
+      <text class="empty-title">等一件好物出现</text>
+      <text class="empty-text">你的校园圈还没有人发布闲置。</text>
+      <button class="btn-primary go-publish" bindtap="goPublish">发布第一件好物</button>
     </view>
 
     <view wx:if="{{loading}}" class="loading">加载中...</view>

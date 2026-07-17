@@ -1,43 +1,11 @@
-<!--pages/item-detail/item-detail.wxml-->
-<text>pages/item-detail/item-detail.wxml</text>
-
 <view class="container" wx:if="{{item}}">
-  <!-- 图片轮播 -->
-  <swiper class="swiper" indicator-dots indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#fff">
-    <block wx:for="{{item.images}}" wx:key="*this">
-      <swiper-item>
-        <image src="{{item}}" mode="aspectFill" class="swiper-img" />
-      </swiper-item>
-    </block>
-  </swiper>
-
-  <!-- 价格和标题 -->
-  <view class="info">
-    <text class="price">¥{{item.price}}</text>
-    <text class="title">{{item.title}}</text>
-    <view class="meta">
-      <text>{{item.category}} · {{item.condition}}</text>
-      <text class="time">{{item.createTime}}</text>
-    </view>
+  <swiper class="swiper" indicator-dots indicator-color="rgba(255,255,255,0.45)" indicator-active-color="#fff"><block wx:for="{{item.images}}" wx:key="*this"><swiper-item><image src="{{item}}" mode="aspectFill" class="swiper-img"/></swiper-item></block></swiper>
+  <view class="content">
+    <view class="top-line"><text class="condition-pill">{{item.condition}}</text><text class="time">发布于 {{item.createTimeFormat}}</text></view>
+    <text class="price">¥{{item.price}}</text><text class="title">{{item.title}}</text><text class="meta">{{item.category}} · {{item.status}}</text>
+    <view class="seller"><image class="seller-avatar" src="{{seller.avatarUrl || ''}}" mode="aspectFill"/><view><text class="seller-label">来自本校同学</text><text class="seller-name">{{seller.nickName}}</text></view><text class="seller-arrow">›</text></view>
+    <view class="desc"><text class="desc-title">关于这件好物</text><text class="desc-content">{{item.description || '卖家还没有补充描述，聊聊看吧。'}}</text></view>
   </view>
-
-  <!-- 发布者信息 -->
-  <view class="seller">
-    <image class="seller-avatar" src="{{seller.avatarUrl || ''}}" mode="aspectFill" />
-    <text class="seller-name">{{seller.nickName}}</text>
-  </view>
-
-  <!-- 描述 -->
-  <view class="desc">
-    <text class="desc-title">商品描述</text>
-    <text class="desc-content">{{item.description || '暂无描述'}}</text>
-  </view>
-
-  <!-- 底部操作栏 -->
-  <view class="footer">
-    <button class="want-btn" bindtap="wantItem">我想要</button>
-  </view>
+  <view class="footer"><button wx:if="{{canContact && item.status === '在售'}}" class="want-btn" bindtap="wantItem">和 TA 聊聊</button><text wx:elif="{{!canContact}}" class="footer-tip">这是你发布的商品</text><text wx:else class="footer-tip">当前状态：{{item.status}}</text></view>
 </view>
-
-<!-- 加载中 -->
-<view wx:else class="loading">加载中...</view>
+<view wx:else class="loading">正在寻找这件好物…</view>

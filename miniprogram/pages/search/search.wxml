@@ -1,25 +1,7 @@
-<!--pages/search/search.wxml-->
-<text>pages/search/search.wxml</text>
-
 <view class="container">
-  <view class="search-bar">
-    <input placeholder="搜索本校商品" bindinput="onInput" value="{{keyword}}" confirm-type="search" bindconfirm="doSearch" />
-    <button class="search-btn" bindtap="doSearch">搜索</button>
-  </view>
-  <scroll-view scroll-y class="result-list" wx:if="{{items.length > 0}}">
-    <view
-      class="item-card"
-      wx:for="{{items}}"
-      wx:key="_id"
-      bindtap="goDetail"
-      data-id="{{item._id}}"
-    >
-      <image src="{{item.images[0] || ''}}" mode="aspectFill" class="item-img" />
-      <view class="item-info">
-        <text class="item-title">{{item.title}}</text>
-        <text class="item-price">¥{{item.price}}</text>
-      </view>
-    </view>
-  </scroll-view>
-  <view wx:if="{{keyword && items.length === 0}}" class="empty">未找到相关商品</view>
+  <view class="search-head"><text class="eyebrow">FIND A TREASURE</text><text class="title">逛逛同学的好物</text></view>
+  <view class="search-bar"><text class="search-glyph">⌕</text><input placeholder="想找什么？例如：高数教材" bindinput="onInput" value="{{keyword}}" confirm-type="search" bindconfirm="doSearch" /><view class="search-action pressable" bindtap="doSearch">搜索</view></view>
+  <scroll-view scroll-y class="result-list" wx:if="{{items.length > 0}}"><view class="result-caption">找到 {{items.length}} 件相关好物</view><view class="item-card pressable" wx:for="{{items}}" wx:key="_id" bindtap="goDetail" data-id="{{item._id}}"><image src="{{item.images[0] || ''}}" mode="aspectFill" class="item-img"/><view class="item-info"><text class="item-tag">{{item.category}}</text><text class="item-title">{{item.title}}</text><text class="item-price">¥{{item.price}}</text></view></view></scroll-view>
+  <view wx:if="{{searched && items.length === 0}}" class="empty"><view class="empty-mark">⌕</view><text class="empty-title">这次没遇到</text><text>换个更短的词，或许就找到了。</text></view>
+  <view wx:if="{{!searched}}" class="suggestion"><text>试试搜索</text><view><text>教材</text><text>耳机</text><text>自行车</text></view></view>
 </view>

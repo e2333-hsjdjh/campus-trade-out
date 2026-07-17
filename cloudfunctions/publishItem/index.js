@@ -16,11 +16,20 @@ exports.main = async (event, context) => {
   if (!user.schoolId) {
     throw new Error('用户未绑定学校');
   }
+  if (!title || !title.trim() || !category || !condition) {
+    throw new Error('请完整填写商品信息');
+  }
+  if (!Number.isFinite(Number(price)) || Number(price) < 0) {
+    throw new Error('请输入有效价格');
+  }
+  if (!Array.isArray(images) || images.length === 0 || images.length > 9) {
+    throw new Error('请上传 1 到 9 张商品图片');
+  }
 
   const item = {
     _openid: openid,
-    title,
-    price,
+    title: title.trim(),
+    price: Number(price),
     description: description || '',
     images: images || [],
     category,

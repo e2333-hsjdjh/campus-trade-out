@@ -26,6 +26,18 @@ Page({
 
     this.loadMessages();
     this.startWatch();
+    this.markRead();
+  },
+
+  async markRead() {
+    try {
+      await wx.cloud.callFunction({
+        name: 'markRead',
+        data: { conversationId: this.data.conversationId }
+      });
+    } catch (err) {
+      console.error('标记已读失败', err);
+    }
   },
 
   onUnload() {
@@ -93,6 +105,7 @@ Page({
               if (change.queueType === 'enqueue') {
                 // 新消息
                 const newMsg = change.doc;
+                newMsg.createTimeFormat = this.formatTime(newMsg.createTime);
                 // 去重：避免重复添加
                 if (!this.data.messages.some(m => m._id === newMsg._id)) {
                   this.setData({
@@ -170,6 +183,8 @@ Page({
   // 时间格式化辅助
   formatTime(date) {
     const d = new Date(date);
-    return `${d.getHours()}:${d.getMinutes()}`;
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
   }
 });
