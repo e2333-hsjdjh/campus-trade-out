@@ -1,0 +1,25 @@
+<!--pages/search/search.wxml-->
+<text>pages/search/search.wxml</text>
+
+<view class="container">
+  <view class="search-bar">
+    <input placeholder="搜索本校商品" bindinput="onInput" value="{{keyword}}" confirm-type="search" bindconfirm="doSearch" />
+    <button class="search-btn" bindtap="doSearch">搜索</button>
+  </view>
+  <scroll-view scroll-y class="result-list" wx:if="{{items.length > 0}}">
+    <view
+      class="item-card"
+      wx:for="{{items}}"
+      wx:key="_id"
+      bindtap="goDetail"
+      data-id="{{item._id}}"
+    >
+      <image src="{{item.images[0] || ''}}" mode="aspectFill" class="item-img" />
+      <view class="item-info">
+        <text class="item-title">{{item.title}}</text>
+        <text class="item-price">¥{{item.price}}</text>
+      </view>
+    </view>
+  </scroll-view>
+  <view wx:if="{{keyword && items.length === 0}}" class="empty">未找到相关商品</view>
+</view>

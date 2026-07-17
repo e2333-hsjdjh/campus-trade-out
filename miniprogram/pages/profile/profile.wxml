@@ -1,0 +1,19 @@
+<view class="container">
+  <view class="avatar-section" bindtap="changeAvatar">
+    <image class="avatar" src="{{avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" />
+    <text class="avatar-tip">点击更换头像</text>
+  </view>
+
+  <view class="form">
+    <view class="form-item">
+      <text>昵称</text>
+      <input placeholder="请输入昵称" value="{{nickName}}" bindinput="onInput" data-field="nickName" />
+    </view>
+    <view class="form-item">
+      <text>微信号</text>
+      <input placeholder="用于交易时交换" value="{{wechatId}}" bindinput="onInput" data-field="wechatId" />
+    </view>
+  </view>
+
+  <button class="btn-primary" bindtap="saveProfile">保存</button>
+</view>

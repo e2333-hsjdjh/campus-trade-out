@@ -1,0 +1,94 @@
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.header {
+  padding: 30rpx;
+  background: #fff;
+  border-bottom: 1rpx solid var(--border);
+}
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.welcome {
+  font-size: 38rpx;
+  font-weight: bold;
+  display: block;
+}
+.search-icon {
+  font-size: 40rpx;
+  padding: 10rpx;
+}
+.school {
+  color: var(--text-secondary);
+  font-size: 28rpx;
+  margin-top: 10rpx;
+}
+.item-list {
+  flex: 1;
+  padding: 0 20rpx;
+}
+.item-card {
+  display: flex;
+  margin-bottom: 20rpx;
+}
+.item-img {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 12rpx;
+  margin-right: 20rpx;
+  background: #f0f0f0;
+}
+.item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.item-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.item-price {
+  color: var(--danger);
+  font-size: 36rpx;
+  font-weight: bold;
+}
+.item-meta {
+  color: var(--text-secondary);
+  font-size: 24rpx;
+}
+.item-time {
+  color: #aaa;
+  font-size: 22rpx;
+}
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 200rpx;
+}
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+.empty-text {
+  color: var(--text-secondary);
+  font-size: 30rpx;
+  margin-bottom: 40rpx;
+}
+.go-publish {
+  padding: 20rpx 60rpx;
+}
+.loading, .no-more {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 20rpx;
+  font-size: 26rpx;
+}

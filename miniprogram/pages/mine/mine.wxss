@@ -1,0 +1,45 @@
+.container {
+  background: var(--bg);
+  min-height: 100vh;
+}
+.user-card {
+  background: var(--primary);
+  color: #fff;
+  padding: 60rpx 30rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.avatar {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  margin-bottom: 20rpx;
+}
+.nickname {
+  font-size: 38rpx;
+  font-weight: bold;
+}
+.school {
+  font-size: 28rpx;
+  margin-top: 10rpx;
+  opacity: 0.9;
+}
+.menu {
+  margin-top: 30rpx;
+  background: #fff;
+}
+.menu-item {
+  padding: 30rpx;
+  border-bottom: 1rpx solid var(--border);
+  font-size: 30rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.menu-item::after {
+  content: '>';
+  color: #ccc;
+  font-size: 28rpx;
+}

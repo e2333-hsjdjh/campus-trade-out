@@ -1,0 +1,22 @@
+<!--pages/chat-list/chat-list.wxml-->
+<text>pages/chat-list/chat-list.wxml</text>
+
+<view class="container">
+  <block wx:if="{{conversations.length > 0}}">
+    <view
+      class="conv-item"
+      wx:for="{{conversations}}"
+      wx:key="_id"
+      bindtap="enterChat"
+      data-id="{{item._id}}"
+    >
+      <image class="conv-avatar" src="{{item.partner.avatarUrl || ''}}" mode="aspectFill" />
+      <view class="conv-info">
+        <text class="conv-name">{{item.partner.nickName}}</text>
+        <text class="conv-lastmsg">{{item.lastMessage.content || '暂无消息'}}</text>
+      </view>
+      <view wx:if="{{item.unreadCount > 0}}" class="unread-badge">{{item.unreadCount}}</view>
+    </view>
+  </block>
+  <view wx:else class="empty">暂无聊天</view>
+</view>

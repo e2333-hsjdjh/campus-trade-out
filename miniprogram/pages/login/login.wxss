@@ -1,0 +1,82 @@
+.container {
+  padding: 60rpx 40rpx;
+}
+.title {
+  font-size: 40rpx;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 50rpx;
+  color: var(--text-main);
+}
+.search-bar {
+  margin-bottom: 30rpx;
+}
+.search-bar input {
+  background: #fff;
+  border: 1rpx solid var(--border);
+  border-radius: 30rpx;
+  padding: 15rpx 30rpx;
+  font-size: 28rpx;
+}
+.school-list {
+  max-height: 60vh;
+  margin-bottom: 40rpx;
+}
+.school-item {
+  padding: 25rpx 20rpx;
+  border-bottom: 1rpx solid var(--border);
+  font-size: 32rpx;
+  color: var(--text-main);
+}
+.school-item.active {
+  background: #e6f7ff;
+  color: var(--primary);
+  font-weight: bold;
+  border-radius: 8rpx;
+}
+.empty-tip {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 40rpx;
+}
+.btn-primary {
+  margin-top: 30rpx;
+}
+.avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 50rpx;
+}
+.avatar {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: #f0f0f0;
+}
+.avatar-placeholder {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: #ddd;
+}
+.avatar-tip {
+  margin-top: 20rpx;
+  color: var(--text-secondary);
+  font-size: 28rpx;
+}
+.input-group {
+  margin-bottom: 40rpx;
+}
+.input-group text {
+  display: block;
+  margin-bottom: 15rpx;
+  font-size: 30rpx;
+  color: var(--text-main);
+}
+.input-group input {
+  background: #fff;
+  border: 1rpx solid var(--border);
+  border-radius: 10rpx;
+  padding: 20rpx;
+}

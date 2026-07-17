@@ -1,0 +1,17 @@
+<view class="container">
+  <block wx:for="{{items}}" wx:key="_id">
+    <view class="item-card">
+      <image src="{{item.images[0] || ''}}" mode="aspectFill" class="item-img" />
+      <view class="item-info">
+        <text>{{item.title}}</text>
+        <text>¥{{item.price}}</text>
+        <text>{{item.status}}</text>
+      </view>
+      <view class="actions">
+        <button size="mini" bindtap="markSold" data-id="{{item._id}}">已售</button>
+        <button size="mini" bindtap="delist" data-id="{{item._id}}">下架</button>
+      </view>
+    </view>
+  </block>
+  <view wx:if="{{items.length === 0}}" class="empty">暂无发布</view>
+</view>

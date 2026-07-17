@@ -1,0 +1,44 @@
+.container {
+  padding: 30rpx;
+}
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40rpx 0;
+}
+.avatar {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: #f0f0f0;
+}
+.avatar-tip {
+  margin-top: 15rpx;
+  color: var(--text-secondary);
+  font-size: 26rpx;
+}
+.form {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 0 30rpx;
+  margin-bottom: 40rpx;
+}
+.form-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx 0;
+  border-bottom: 1rpx solid var(--border);
+}
+.form-item text {
+  width: 120rpx;
+  font-size: 30rpx;
+  color: var(--text-main);
+}
+.form-item input {
+  flex: 1;
+  font-size: 30rpx;
+}
+.btn-primary {
+  margin-top: 20rpx;
+}

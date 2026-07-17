@@ -1,0 +1,35 @@
+<view class="container">
+  <block wx:if="{{step === 1}}">
+    <view class="title">选择你的学校</view>
+    <view class="search-bar">
+      <input placeholder="🔍 搜索学校名称" bindinput="onSearchSchool" value="{{searchKey}}" />
+    </view>
+    <scroll-view scroll-y class="school-list">
+      <view
+        class="school-item {{selectedSchoolId === item.id ? 'active' : ''}}"
+        wx:for="{{filteredSchools}}"
+        wx:key="id"
+        bindtap="selectSchool"
+        data-id="{{item.id}}"
+      >
+        {{item.name}}
+      </view>
+      <view wx:if="{{filteredSchools.length === 0}}" class="empty-tip">未找到匹配的学校</view>
+    </scroll-view>
+    <button class="btn-primary" bindtap="nextStep" disabled="{{!selectedSchoolId}}">下一步</button>
+  </block>
+
+  <block wx:if="{{step === 2}}">
+    <view class="title">完善个人信息</view>
+    <view class="avatar-wrap" bindtap="getUserProfile">
+      <image class="avatar" src="{{avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" />
+      <view wx:if="{{!avatarUrl}}" class="avatar-placeholder"></view>
+      <text class="avatar-tip">点击获取微信头像昵称</text>
+    </view>
+    <view class="input-group">
+      <text>昵称</text>
+      <input placeholder="请输入昵称" value="{{nickName}}" bindinput="onNickNameInput" />
+    </view>
+    <button class="btn-primary" bindtap="doLogin">完成登录</button>
+  </block>
+</view>

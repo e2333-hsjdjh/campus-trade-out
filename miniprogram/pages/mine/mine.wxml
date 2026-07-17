@@ -1,0 +1,15 @@
+<!--pages/mine/mine.wxml-->
+<text>pages/mine/mine.wxml</text>
+<view class="container">
+  <view class="user-card">
+    <image class="avatar" src="{{userInfo.avatarUrl || ''}}" mode="aspectFill" />
+    <text class="nickname">{{userInfo.nickName}}</text>
+    <text class="school">{{schoolName}}</text>
+  </view>
+
+  <view class="menu">
+    <view class="menu-item" bindtap="goMyItems">我的发布</view>
+    <view class="menu-item" bindtap="goChatList">我的聊天</view>
+    <view class="menu-item" bindtap="goEditProfile">编辑资料</view>
+  </view>
+</view>
