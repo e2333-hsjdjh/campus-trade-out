@@ -1,9 +1,12 @@
+const app = getApp();
+
 Page({
   data: {
     conversations: []
   },
 
   onShow() {
+    if (!app.requireLogin()) return;
     this.loadConversations();
   },
 

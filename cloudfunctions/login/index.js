@@ -13,6 +13,9 @@ exports.main = async (event) => {
 
   let phoneNumberMasked = '';
   let resolvedNickName = nickName && nickName.trim();
+  const userRes = await db.collection('users').where({ _openid: openid }).get();
+  let user = userRes.data[0];
+
   if (phoneCode) {
     const phoneResult = await cloud.openapi.phonenumber.getPhoneNumber({
       code: phoneCode
@@ -22,13 +25,10 @@ exports.main = async (event) => {
       throw new Error('手机号授权失败');
     }
     phoneNumberMasked = phoneNumber.replace(/^(\d{3})\d+(\d{4})$/, '$1****$2');
-    if (!resolvedNickName) {
+    if (!resolvedNickName && !user) {
       resolvedNickName = `同学${phoneNumber.slice(-4)}`;
     }
   }
-
-  const userRes = await db.collection('users').where({ _openid: openid }).get();
-  let user = userRes.data[0];
 
   if (user) {
     const updateData = {};

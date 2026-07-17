@@ -6,15 +6,11 @@ Page({
   },
 
   onShow() {
+    if (!app.requireLogin()) return;
     this.loadItems();
   },
 
   async loadItems() {
-    if (!app.isLoggedIn()) {
-      wx.showToast({ title: '未登录', icon: 'none' });
-      return;
-    }
-
     wx.showLoading({ title: '加载中' });
     try {
       const res = await wx.cloud.callFunction({ name: 'getMyItems' });

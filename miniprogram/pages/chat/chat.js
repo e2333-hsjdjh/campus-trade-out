@@ -16,6 +16,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!app.requireLogin()) return;
     const { conversationId, itemTitle } = options;
     this.setData({
       conversationId,

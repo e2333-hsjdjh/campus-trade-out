@@ -1,11 +1,51 @@
-<view class="container" wx:if="{{item}}">
-  <swiper class="swiper" indicator-dots indicator-color="rgba(255,255,255,0.45)" indicator-active-color="#fff"><block wx:for="{{item.images}}" wx:key="*this"><swiper-item><image src="{{item}}" mode="aspectFill" class="swiper-img"/></swiper-item></block></swiper>
-  <view class="content">
-    <view class="top-line"><text class="condition-pill">{{item.condition}}</text><text class="time">发布于 {{item.createTimeFormat}}</text></view>
-    <text class="price">¥{{item.price}}</text><text class="title">{{item.title}}</text><text class="meta">{{item.category}} · {{item.status}}</text>
-    <view class="seller"><image class="seller-avatar" src="{{seller.avatarUrl || ''}}" mode="aspectFill"/><view><text class="seller-label">来自本校同学</text><text class="seller-name">{{seller.nickName}}</text></view><text class="seller-arrow">›</text></view>
-    <view class="desc"><text class="desc-title">关于这件好物</text><text class="desc-content">{{item.description || '卖家还没有补充描述，聊聊看吧。'}}</text></view>
+<view class="detail-page" wx:if="{{item}}">
+  <view class="gallery">
+    <swiper class="gallery-swiper" circular="{{item.imageCount > 1}}" bindchange="onSwiperChange">
+      <swiper-item wx:for="{{item.images}}" wx:key="*this">
+        <image class="gallery-image" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-src="{{item}}"/>
+      </swiper-item>
+    </swiper>
+    <view class="gallery-count" wx:if="{{item.imageCount > 0}}">{{imageIndex + 1}} / {{item.imageCount}}</view>
+    <view class="status-float {{item.status === '在售' ? 'selling' : 'inactive'}}">{{item.status}}</view>
   </view>
-  <view class="footer"><button wx:if="{{canContact && item.status === '在售'}}" class="want-btn" bindtap="wantItem">和 TA 聊聊</button><text wx:elif="{{!canContact}}" class="footer-tip">这是你发布的商品</text><text wx:else class="footer-tip">当前状态：{{item.status}}</text></view>
+
+  <view class="content-stack">
+    <view class="summary-card">
+      <view class="price-row"><text class="price"><text>¥</text>{{item.price}}</text><text class="publish-time">发布于 {{item.createTimeFormat}}</text></view>
+      <text class="item-title">{{item.title}}</text>
+      <view class="tag-row"><text>{{item.category}}</text><text>{{item.condition}}</text><text>同校面交</text></view>
+    </view>
+
+    <view class="info-card">
+      <view class="section-heading"><text>商品信息</text><text>真实描述更好成交</text></view>
+      <view class="spec-grid">
+        <view><text>分类</text><text>{{item.category}}</text></view>
+        <view><text>成色</text><text>{{item.condition}}</text></view>
+        <view><text>交易方式</text><text>校内面交</text></view>
+      </view>
+      <view class="description"><text>详细描述</text><text user-select="{{true}}">{{item.description || '卖家暂未补充更多描述，可以点击下方按钮进一步沟通。'}}</text></view>
+    </view>
+
+    <view class="seller-card">
+      <image class="seller-avatar" src="{{seller.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill"/>
+      <view class="seller-copy"><view><text class="seller-name">{{seller.nickName || '校园同学'}}</text><text wx:if="{{seller.verified}}" class="verified">已认证</text></view><text>{{schoolName || '本校'}}同学 · 仅展示公开资料</text></view>
+      <view class="seller-badge">校友</view>
+    </view>
+
+    <view class="promise-card"><view class="promise-icon">验</view><view><text>当面验货，再确认交易</text><text>建议在教学楼、食堂等校内公共区域见面</text></view></view>
+
+    <view class="safety-link pressable" bindtap="goSafetyGuide"><view><text>安全交易提醒</text><text>不提前支付押金，不点击陌生付款链接</text></view><text>查看指南 ›</text></view>
+    <text class="detail-note">平台仅提供校园闲置信息与沟通服务，请根据实物情况自主判断。</text>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="bar-tool pressable" bindtap="goHome"><view>首</view><text>首页</text></view>
+    <button class="bar-tool share-tool pressable" open-type="share"><view>享</view><text>分享</text></button>
+    <button wx:if="{{isOwner}}" class="primary-action owner-action" bindtap="manageItem">管理商品</button>
+    <button wx:elif="{{canContact}}" class="primary-action" loading="{{contacting}}" disabled="{{contacting}}" bindtap="wantItem">我想要 · 和 TA 聊聊</button>
+    <view wx:else class="primary-action disabled-action">当前商品{{item.status}}</view>
+  </view>
 </view>
-<view wx:else class="loading">正在寻找这件好物…</view>
+
+<view wx:elif="{{loadError}}" class="state-page"><view class="state-symbol">!</view><text class="state-title">商品暂时无法展示</text><text class="state-copy">商品可能已删除、已下架，或当前账号无权查看。</text><button bindtap="retryLoad">重新加载</button><text class="back-home pressable" bindtap="goHome">返回首页</text></view>
+<view wx:else class="state-page loading-page"><view class="skeleton-image"></view><view class="skeleton-line wide"></view><view class="skeleton-line"></view><text>正在加载商品信息...</text></view>

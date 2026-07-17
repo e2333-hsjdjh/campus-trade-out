@@ -22,10 +22,16 @@ exports.main = async (event) => {
   const sellerRes = await db.collection('users').where({ _openid: item._openid }).get();
   const seller = sellerRes.data[0] ? {
     nickName: sellerRes.data[0].nickName,
-    avatarUrl: sellerRes.data[0].avatarUrl
+    avatarUrl: sellerRes.data[0].avatarUrl,
+    verified: !!sellerRes.data[0].verified
   } : {};
 
   // 可选：增加浏览量等
 
-  return { item, seller };
+  const { _openid, ...publicItem } = item;
+  return {
+    item: publicItem,
+    seller,
+    isOwner: item._openid === openid
+  };
 };

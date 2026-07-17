@@ -4,7 +4,7 @@
 
 ## 功能
 
-- 微信登录、学校绑定与本地登录态恢复
+- 访客按学校浏览、微信登录、学校绑定与本地登录态恢复
 - 商品图片上传、发布、同校浏览、关键词搜索与状态管理
 - 商品详情、商品关联会话、历史消息、实时新消息与未读数
 - 个人资料、我的发布和我的聊天
@@ -37,8 +37,8 @@ cloudfunctions/              微信云函数（Node.js）
 ### 2. 导入项目与设置云环境
 
 1. 在微信开发者工具中导入本目录，AppID 使用 `project.config.json` 中的值或替换为自己的 AppID。
-2. 打开 [miniprogram/app.js](miniprogram/app.js)，将 `your-cloud-env-id` 改为云开发控制台中的环境 ID。
-3. 修改其中的 `schoolList` 为实际允许交易的学校列表。当前 `XX大学` 等仅为示例数据。
+2. [miniprogram/app.js](miniprogram/app.js) 当前使用环境 `cloud1-d8gctnpc38f1b09ce`；切换部署环境时同步修改此值。
+3. 当前 `schoolList` 仅开放“中国人民大学苏州校区”（ID：`ruc_suzhou`）。
 
 ### 3. 创建集合
 
@@ -50,6 +50,13 @@ cloudfunctions/              微信云函数（Node.js）
 | `items` | 商品 | `_openid`、`title`、`price`、`images`、`schoolId`、`status` |
 | `conversations` | 商品会话 | `conversationKey`、`participants`、`itemId`、`unreadCount` |
 | `messages` | 聊天消息 | `conversationId`、`participants`、`senderOpenid`、`content` |
+
+商品列表支持同校、分类、成色和价格排序。数据量增加前请在 `items` 集合按控制台提示建立组合索引，至少覆盖：
+
+- `schoolId + status + createTime`
+- `schoolId + status + category + createTime`
+- `schoolId + status + category + condition + createTime`
+- 价格排序时，将最后一个排序字段替换为 `price`
 
 `messages.participants` 是实时监听的授权字段。旧的测试消息如果没有此字段，建议在启用安全规则前删除或补齐为对应会话的参与者数组。
 
@@ -80,7 +87,7 @@ cloudfunctions/              微信云函数（Node.js）
 
 ## 手工验收清单
 
-1. 新账号选择学校和昵称后可进入首页，重启后仍保持登录。
+1. 未登录用户进入首页后先选择学校，可上下滑动浏览；点击搜索、分类、商品、发布或个人页时进入登录界面。
 2. A 校发布商品后，A 校的其他账号可在首页和搜索中看到；B 校账号无法通过商品 ID 打开详情。
 3. 商品详情中买家可创建会话；连续点击或两个请求同时到达时只保留一个会话。
 4. 买卖双方可实时收到新消息；进入会话会清除自己的未读数；第三方账号无法读取或标记该会话。

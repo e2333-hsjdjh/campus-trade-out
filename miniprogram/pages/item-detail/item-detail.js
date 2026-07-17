@@ -1,64 +1,134 @@
 const app = getApp();
 
+function formatDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
 Page({
   data: {
+    itemId: '',
     item: null,
     seller: null,
-    canContact: false
+    schoolName: '',
+    isOwner: false,
+    canContact: false,
+    imageIndex: 0,
+    loading: false,
+    loadError: false,
+    contacting: false
   },
 
   onLoad(options) {
-    const id = options.id;
-    if (!id) return;
-    this.loadItemDetail(id);
+    const itemId = options.id || '';
+    const school = app.getBrowseSchool();
+    this.setData({ itemId, schoolName: school ? school.name : '' });
+    if (!itemId) {
+      this.setData({ loadError: true });
+      return;
+    }
+    if (!app.requireLogin()) return;
+    this.loadItemDetail();
   },
 
-  async loadItemDetail(id) {
-    wx.showLoading({ title: '加载中' });
-    try {
-      // 调用云函数获取单个商品详情
-      const res = await wx.cloud.callFunction({
-        name: 'getItemDetail',
-        data: { itemId: id }
-      });
-      const item = res.result.item;
-      const seller = res.result.seller;
-      const createdAt = new Date(item.createTime);
-      item.createTimeFormat = `${createdAt.getFullYear()}.${String(createdAt.getMonth() + 1).padStart(2, '0')}.${String(createdAt.getDate()).padStart(2, '0')}`;
-
-      this.setData({
-        item,
-        seller,
-        canContact: item._openid !== app.globalData.openid
-      });
-      wx.hideLoading();
-    } catch (err) {
-      wx.hideLoading();
-      console.error('加载详情失败', err);
-      wx.showToast({ title: '加载失败', icon: 'error' });
+  onShow() {
+    if (app.isLoggedIn() && this.data.itemId && !this.data.item && !this.data.loading && !this.data.loadError) {
+      this.loadItemDetail();
     }
   },
 
-  // 点击“我想要”，跳转聊天（下一步实现）
- // 点击“我想要”
-async wantItem() {
-  if (!this.data.item) return;
-  wx.showLoading({ title: '准备聊天' });
-  try {
-    const res = await wx.cloud.callFunction({
-      name: 'createConversation',
-      data: { itemId: this.data.item._id }
+  async loadItemDetail() {
+    if (this.data.loading || !this.data.itemId) return;
+    this.setData({ loading: true, loadError: false });
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'getItemDetail',
+        data: { itemId: this.data.itemId }
+      });
+      const result = res.result || {};
+      const item = result.item;
+      if (!item) throw new Error('商品不存在');
+      item.createTimeFormat = formatDate(item.createTime);
+      item.imageCount = Array.isArray(item.images) ? item.images.length : 0;
+      this.setData({
+        item,
+        seller: result.seller || {},
+        isOwner: !!result.isOwner,
+        canContact: !result.isOwner && item.status === '在售',
+        loading: false
+      });
+      wx.setNavigationBarTitle({ title: item.title || '商品详情' });
+    } catch (err) {
+      console.error('加载详情失败', err);
+      this.setData({ loading: false, loadError: true });
+      wx.showToast({ title: '商品详情加载失败', icon: 'none' });
+    }
+  },
+
+  onSwiperChange(e) {
+    this.setData({ imageIndex: e.detail.current });
+  },
+
+  previewImage(e) {
+    const images = this.data.item && this.data.item.images;
+    if (!images || images.length === 0) return;
+    wx.previewImage({
+      current: e.currentTarget.dataset.src || images[this.data.imageIndex],
+      urls: images
     });
-    const conversationId = res.result.conversationId;
-    wx.hideLoading();
-    // 跳转到聊天页面，并传递会话 ID 和商品标题（用于标题栏）
-    wx.navigateTo({
-      url: `/pages/chat/chat?conversationId=${conversationId}&itemTitle=${encodeURIComponent(this.data.item.title)}`
-    });
-  } catch (err) {
-    wx.hideLoading();
-    console.error('创建会话失败', err);
-    wx.showToast({ title: '操作失败，请重试', icon: 'none' });
+  },
+
+  retryLoad() {
+    this.setData({ loadError: false });
+    this.loadItemDetail();
+  },
+
+  goHome() {
+    wx.switchTab({ url: '/pages/index/index' });
+  },
+
+  goSafetyGuide() {
+    wx.navigateTo({ url: '/pages/safety-guide/safety-guide' });
+  },
+
+  manageItem() {
+    wx.navigateTo({ url: '/pages/mine/my-items/my-items' });
+  },
+
+  async wantItem() {
+    if (!this.data.canContact || this.data.contacting) return;
+    this.setData({ contacting: true });
+    wx.showLoading({ title: '正在建立会话' });
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'createConversation',
+        data: { itemId: this.data.item._id }
+      });
+      const conversationId = res.result.conversationId;
+      wx.hideLoading();
+      wx.navigateTo({
+        url: `/pages/chat/chat?conversationId=${conversationId}&itemTitle=${encodeURIComponent(this.data.item.title)}`
+      });
+    } catch (err) {
+      wx.hideLoading();
+      console.error('创建会话失败', err);
+      const message = String(err && err.errMsg || err);
+      wx.showToast({
+        title: message.includes('FUNCTION_NOT_FOUND') ? '聊天云函数尚未部署' : '暂时无法发起聊天',
+        icon: 'none'
+      });
+    } finally {
+      this.setData({ contacting: false });
+    }
+  },
+
+  onShareAppMessage() {
+    const item = this.data.item || {};
+    return {
+      title: item.title ? `${item.title}｜校园闲置` : '校园闲置好物',
+      path: `/pages/item-detail/item-detail?id=${this.data.itemId}`,
+      imageUrl: item.images && item.images[0] ? item.images[0] : ''
+    };
   }
-}
 });

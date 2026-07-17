@@ -1,20 +1,34 @@
 const app = getApp();
 
-// 时间格式化工具
-function formatTime(date) {
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+function formatTime(value) {
+  const date = new Date(value);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  if (diff < 60 * 60 * 1000) return '刚刚';
+  if (diff < 24 * 60 * 60 * 1000) return `${Math.floor(diff / 3600000)}小时前`;
+  return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
 Page({
   data: {
-    nickName: '',
-    schoolName: '',
-    greeting: '',
+    statusBarHeight: 20,
+    schoolName: '选择学校',
+    selectedSchoolId: '',
+    schoolModalVisible: false,
+    allSchools: [],
+    filteredSchools: [],
+    schoolSearchKey: '',
+    categories: [
+      { key: '教材', icon: '书', label: '教材书籍', tone: 'blue' },
+      { key: '电子产品', icon: '电', label: '数码电子', tone: 'violet' },
+      { key: '生活用品', icon: '家', label: '宿舍生活', tone: 'orange' },
+      { key: '服饰', icon: '衣', label: '服饰穿搭', tone: 'rose' },
+      { key: '运动器材', icon: '动', label: '运动户外', tone: 'green' },
+      { key: '其他', icon: '集', label: '其他闲置', tone: 'yellow' }
+    ],
     items: [],
+    sort: 'latest',
+    sortLabel: '最新发布',
     skip: 0,
     limit: 10,
     hasMore: true,
@@ -23,36 +37,116 @@ Page({
   },
 
   onLoad() {
-    if (!app.isLoggedIn()) {
-      wx.redirectTo({ url: '/pages/login/login' });
-      return;
-    }
-
-    const user = app.globalData.userInfo;
-    const school = app.globalData.schoolList.find(s => s.id === user.schoolId);
-    const hour = new Date().getHours();
-    let greeting = '早上好';
-    if (hour >= 12 && hour < 18) greeting = '下午好';
-    else if (hour >= 18) greeting = '晚上好';
-
+    const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
     this.setData({
-      nickName: user.nickName,
-      schoolName: school ? school.name : '未知学校',
-      greeting
+      statusBarHeight: windowInfo.statusBarHeight || 20,
+      allSchools: app.globalData.schoolList,
+      filteredSchools: app.globalData.schoolList
     });
-
-    this.loadItems();
   },
 
   onShow() {
-    // 每次页面显示时刷新列表（从后台切回时自动刷新）
-    this.setData({ skip: 0 });
+    const school = app.getBrowseSchool();
+    if (!school) {
+      this.setData({ schoolModalVisible: true, items: [] });
+      return;
+    }
+
+    const schoolChanged = school.id !== this.data.selectedSchoolId;
+    const shouldPrompt = !app.isLoggedIn() && !app.globalData.schoolPromptShown;
+    this.setData({
+      selectedSchoolId: school.id,
+      schoolName: school.name,
+      schoolModalVisible: shouldPrompt
+    });
+    if (schoolChanged || this.data.items.length === 0) this.loadItems(true);
+  },
+
+  openSchoolSelector() {
+    if (app.isLoggedIn()) {
+      wx.showToast({ title: '学校已与账号绑定', icon: 'none' });
+      return;
+    }
+    app.globalData.schoolPromptShown = true;
+    this.setData({
+      schoolModalVisible: true,
+      schoolSearchKey: '',
+      filteredSchools: this.data.allSchools
+    });
+  },
+
+  onSearchSchool(e) {
+    const key = e.detail.value.trim().toLowerCase();
+    const filteredSchools = this.data.allSchools.filter(item =>
+      item.name.toLowerCase().includes(key)
+    );
+    this.setData({ schoolSearchKey: key, filteredSchools });
+  },
+
+  selectSchool(e) {
+    const school = app.selectBrowseSchool(e.currentTarget.dataset.id);
+    if (!school) return;
+    this.setData({
+      selectedSchoolId: school.id,
+      schoolName: school.name,
+      schoolModalVisible: false,
+      items: [],
+      skip: 0,
+      hasMore: true
+    });
     this.loadItems(true);
   },
 
-  // 加载商品列表
+  goSafetyGuide() {
+    if (!app.requireLogin()) return;
+    wx.navigateTo({ url: '/pages/safety-guide/safety-guide' });
+  },
+
+  chooseSort() {
+    if (!app.requireLogin()) return;
+    const options = [
+      { label: '最新发布', value: 'latest' },
+      { label: '价格从低到高', value: 'priceAsc' },
+      { label: '价格从高到低', value: 'priceDesc' }
+    ];
+    wx.showActionSheet({
+      itemList: options.map(item => item.label),
+      success: ({ tapIndex }) => {
+        const selected = options[tapIndex];
+        if (!selected || selected.value === this.data.sort || this.data.loading) return;
+        this.setData({ sort: selected.value, sortLabel: selected.label });
+        this.loadItems(true);
+      }
+    });
+  },
+
+  goSearch() {
+    if (!app.requireLogin()) return;
+    wx.navigateTo({ url: '/pages/search/search' });
+  },
+
+  goCategory(e) {
+    if (!app.requireLogin()) return;
+    const key = e.currentTarget.dataset.key;
+    const category = this.data.categories.find(item => item.key === key);
+    if (!category) return;
+    wx.navigateTo({
+      url: `/pages/category/category?category=${encodeURIComponent(category.key)}&label=${encodeURIComponent(category.label)}`
+    });
+  },
+
+  goDetail(e) {
+    if (!app.requireLogin()) return;
+    wx.navigateTo({ url: `/pages/item-detail/item-detail?id=${e.currentTarget.dataset.id}` });
+  },
+
+  goPublish() {
+    if (!app.requireLogin('/pages/publish/publish')) return;
+    wx.switchTab({ url: '/pages/publish/publish' });
+  },
+
   async loadItems(isRefresh = false) {
-    if (this.data.loading) return;
+    if (this.data.loading || !this.data.selectedSchoolId) return;
     this.setData({ loading: true });
 
     try {
@@ -60,60 +154,42 @@ Page({
       const res = await wx.cloud.callFunction({
         name: 'getItems',
         data: {
+          schoolId: this.data.selectedSchoolId,
+          sort: this.data.sort,
           skip,
           limit: this.data.limit
         }
       });
-
-      const newItems = res.result.items;
-      const total = res.result.total;
-      const hasMore = res.result.hasMore;
-
-      // 格式化时间
-      newItems.forEach(item => {
-        item.createTimeFormat = formatTime(item.createTime);
-      });
-
+      const result = res.result || {};
+      const newItems = (result.items || []).map(item => ({
+        ...item,
+        createTimeFormat: formatTime(item.createTime)
+      }));
       this.setData({
         items: isRefresh ? newItems : this.data.items.concat(newItems),
         skip: skip + newItems.length,
-        total,
-        hasMore,
+        hasMore: !!result.hasMore,
         loading: false,
         refreshing: false
       });
     } catch (err) {
       console.error('加载商品失败', err);
       this.setData({ loading: false, refreshing: false });
-      wx.showToast({ title: '加载失败', icon: 'none' });
+      wx.showToast({ title: '商品列表暂时不可用', icon: 'none' });
     }
   },
 
-  // 下拉刷新
   onRefresh() {
+    if (this.data.loading) {
+      this.setData({ refreshing: false });
+      return;
+    }
     this.setData({ refreshing: true, skip: 0 });
     this.loadItems(true);
   },
 
-  // 上拉加载更多
   loadMore() {
     if (!this.data.hasMore || this.data.loading) return;
     this.loadItems();
-  },
-
-  // 跳转商品详情
-  goDetail(e) {
-    const id = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: `/pages/item-detail/item-detail?id=${id}` });
-  },
-
-  // 跳转发布页
-  goPublish() {
-    wx.switchTab({ url: '/pages/publish/publish' });
-  },
-
-  // 跳转搜索页
-  goSearch() {
-    wx.navigateTo({ url: '/pages/search/search' });
   }
 });
