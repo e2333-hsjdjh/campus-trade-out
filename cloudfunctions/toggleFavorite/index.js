@@ -2,6 +2,7 @@ const cloud = require('wx-server-sdk');
 
 cloud.init();
 const db = cloud.database();
+const command = db.command;
 
 exports.main = async (event) => {
   const { OPENID: openid } = cloud.getWXContext();
@@ -20,21 +21,11 @@ exports.main = async (event) => {
   if (item.schoolId !== user.schoolId) throw new Error('只能收藏同校商品');
   if (item._openid === openid) throw new Error('不能收藏自己的商品');
 
-  const where = { _openid: openid, itemId };
-  const existing = await db.collection('favorites').where(where).get();
-
-  if (favorited && existing.data.length === 0) {
-    await db.collection('favorites').add({
-      data: {
-        _openid: openid,
-        itemId,
-        schoolId: user.schoolId,
-        createTime: new Date()
-      }
-    });
-  } else if (!favorited && existing.data.length > 0) {
-    await db.collection('favorites').where(where).remove();
-  }
+  await db.collection('users').doc(user._id).update({
+    data: {
+      favoriteItemIds: favorited ? command.addToSet(itemId) : command.pull(itemId)
+    }
+  });
 
   return { success: true, favorited };
 };

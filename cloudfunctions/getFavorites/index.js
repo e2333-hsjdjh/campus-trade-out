@@ -13,14 +13,10 @@ exports.main = async (event) => {
   const user = userRes.data[0];
   if (!user || !user.schoolId) throw new Error('用户未绑定学校');
 
-  const where = { _openid: openid, schoolId: user.schoolId };
-  const [favoriteRes, countRes] = await Promise.all([
-    db.collection('favorites').where(where).orderBy('createTime', 'desc').skip(skip).limit(limit).get(),
-    db.collection('favorites').where(where).count()
-  ]);
-  const ids = favoriteRes.data.map(item => item.itemId);
+  const allIds = Array.isArray(user.favoriteItemIds) ? user.favoriteItemIds.slice().reverse() : [];
+  const ids = allIds.slice(skip, skip + limit);
   if (ids.length === 0) {
-    return { items: [], total: countRes.total, hasMore: false, nextSkip: skip };
+    return { items: [], total: allIds.length, hasMore: false, nextSkip: skip };
   }
 
   const itemRes = await db.collection('items').where({
@@ -28,21 +24,17 @@ exports.main = async (event) => {
     schoolId: user.schoolId
   }).get();
   const itemMap = new Map(itemRes.data.map(item => [item._id, item]));
-  const items = favoriteRes.data.map(favorite => {
-    const item = itemMap.get(favorite.itemId);
+  const items = ids.map(itemId => {
+    const item = itemMap.get(itemId);
     if (!item) return null;
     const { _openid, ...publicItem } = item;
-    return {
-      ...publicItem,
-      favoriteId: favorite._id,
-      favoriteTime: favorite.createTime
-    };
+    return publicItem;
   }).filter(Boolean);
 
   return {
     items,
-    total: countRes.total,
-    hasMore: skip + favoriteRes.data.length < countRes.total,
-    nextSkip: skip + favoriteRes.data.length
+    total: allIds.length,
+    hasMore: skip + ids.length < allIds.length,
+    nextSkip: skip + ids.length
   };
 };

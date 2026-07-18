@@ -25,6 +25,17 @@ function formatComments(comments) {
   }));
 }
 
+function normalizeImages(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value !== 'string' || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [value];
+  } catch (err) {
+    return [value];
+  }
+}
+
 Page({
   data: {
     itemId: '',
@@ -34,6 +45,7 @@ Page({
     isOwner: false,
     isFavorited: false,
     canContact: false,
+    canComment: false,
     imageIndex: 0,
     loading: false,
     loadError: false,
@@ -76,6 +88,7 @@ Page({
       const result = res.result || {};
       const item = result.item;
       if (!item) throw new Error('商品不存在');
+      item.images = normalizeImages(item.images);
       item.createTimeFormat = formatDate(item.createTime);
       item.imageCount = Array.isArray(item.images) ? item.images.length : 0;
       this.setData({
@@ -84,6 +97,7 @@ Page({
         isOwner: !!result.isOwner,
         isFavorited: !!result.isFavorited,
         canContact: !result.isOwner && item.status === '在售',
+        canComment: !!result.isOwner || item.status === '在售',
         comments: formatComments(result.comments),
         commentCount: Number(result.commentCount || 0),
         loading: false
@@ -252,7 +266,7 @@ Page({
 
   async submitComment() {
     const content = this.data.commentText.trim();
-    if (!this.data.canContact || !content || this.data.commentSubmitting) return;
+    if (!this.data.canComment || !content || this.data.commentSubmitting) return;
     this.setData({ commentSubmitting: true });
     try {
       const res = await wx.cloud.callFunction({

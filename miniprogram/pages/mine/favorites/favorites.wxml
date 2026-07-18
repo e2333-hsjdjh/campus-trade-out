@@ -8,7 +8,13 @@
         <text class="item-title">{{item.title}}</text>
         <view class="item-meta"><text>¥{{item.price}}</text><text>{{item.condition}} · {{item.category}}</text></view>
       </view>
-      <button class="remove-button" loading="{{removingId === item._id}}" disabled="{{!!removingId}}" catchtap="removeFavorite" data-id="{{item._id}}">取消</button>
+      <view
+        class="remove-button pressable {{removingId ? 'is-disabled' : ''}}"
+        role="button"
+        aria-label="取消收藏"
+        catchtap="removeFavorite"
+        data-id="{{item._id}}"
+      >{{removingId === item._id ? '…' : '取消'}}</view>
     </view>
     <view wx:if="{{loading}}" class="list-note">正在加载更多...</view>
     <view wx:elif="{{!hasMore}}" class="list-note">已经看完全部收藏</view>

@@ -22,8 +22,8 @@ exports.main = async (event) => {
   if (!item) throw new Error('商品不存在');
   if (!user || !user.schoolId) throw new Error('请先登录并选择学校');
   if (item.schoolId !== user.schoolId) throw new Error('只能评论同校商品');
-  if (item._openid === openid) throw new Error('不能评论自己的商品');
-  if (item.status !== '在售') throw new Error('当前商品不可评论');
+  const isSeller = item._openid === openid;
+  if (!isSeller && item.status !== '在售') throw new Error('当前商品不可评论');
 
   const createTime = new Date();
   const comment = {
@@ -34,7 +34,8 @@ exports.main = async (event) => {
     author: {
       nickName: user.nickName || '校园同学',
       avatarUrl: user.avatarUrl || '',
-      verified: !!user.verified
+      verified: !!user.verified,
+      isSeller
     },
     createTime
   };

@@ -9,6 +9,17 @@ function formatTime(value) {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+function normalizeImages(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value !== 'string' || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [value];
+  } catch (err) {
+    return [value];
+  }
+}
+
 Page({
   data: {
     statusBarHeight: 20,
@@ -175,6 +186,7 @@ Page({
       const result = res.result || {};
       const newItems = (result.items || []).map(item => ({
         ...item,
+        images: normalizeImages(item.images),
         createTimeFormat: formatTime(item.createTime)
       }));
       this.setData({

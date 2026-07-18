@@ -30,7 +30,7 @@
         <image class="goods-image" src="{{item.images[0] || ''}}" mode="aspectFill"/>
         <view class="goods-body">
           <text class="goods-title">{{item.title}}</text>
-          <view class="goods-tags"><text>{{item.condition}}</text><text>{{item.category}}</text></view>
+          <view class="goods-tags"><text wx:if="{{item.isDemo}}" class="demo-tag">演示</text><text>{{item.condition}}</text><text>{{item.category}}</text></view>
           <view class="goods-bottom"><text class="goods-price"><text>¥</text>{{item.price}}</text><text class="goods-time">{{item.createTimeFormat}}</text></view>
         </view>
       </view>

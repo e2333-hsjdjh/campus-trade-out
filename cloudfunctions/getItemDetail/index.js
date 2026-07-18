@@ -26,14 +26,9 @@ exports.main = async (event) => {
     verified: !!sellerRes.data[0].verified
   } : {};
 
-  let isFavorited = false;
-  if (item._openid !== openid) {
-    const favoriteRes = await db.collection('favorites').where({
-      _openid: openid,
-      itemId
-    }).count();
-    isFavorited = favoriteRes.total > 0;
-  }
+  // 收藏关系直接保存在用户文档中，避免未创建 favorites 集合时阻断整个详情页。
+  const favoriteItemIds = Array.isArray(viewer.favoriteItemIds) ? viewer.favoriteItemIds : [];
+  const isFavorited = item._openid !== openid && favoriteItemIds.includes(itemId);
 
   let comments = [];
   let commentCount = 0;
@@ -45,7 +40,12 @@ exports.main = async (event) => {
     comments = commentRes.data
       .sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime())
       .slice(0, 30)
-      .map(({ _openid: commentOpenid, ...comment }) => comment);
+      .map(comment => ({
+        _id: comment._id,
+        content: comment.content,
+        author: comment.author || {},
+        createTime: comment.createTime
+      }));
     commentCount = countRes.total;
   } catch (err) {
     const message = String((err && (err.errMsg || err.message)) || err);

@@ -13,7 +13,7 @@
     <view class="summary-card">
       <view class="price-row"><text class="price"><text>¥</text>{{item.price}}</text><text class="publish-time">发布于 {{item.createTimeFormat}}</text></view>
       <text class="item-title">{{item.title}}</text>
-      <view class="tag-row"><text>{{item.category}}</text><text>{{item.condition}}</text><text>同校面交</text></view>
+      <view class="tag-row"><text wx:if="{{item.isDemo}}" class="demo-tag">演示商品</text><text>{{item.category}}</text><text>{{item.condition}}</text><text>同校面交</text></view>
     </view>
 
     <view class="info-card">
@@ -34,16 +34,15 @@
 
     <view class="comment-card">
       <view class="comment-heading"><view><text>同学评论</text><text>{{commentCount}}</text></view><text>公开留言</text></view>
-      <view wx:if="{{canContact}}" class="comment-composer">
-        <textarea class="comment-input" value="{{commentText}}" maxlength="200" auto-height placeholder="想了解商品细节？在这里问问卖家和同学" bindinput="onCommentInput"></textarea>
+      <view wx:if="{{canComment}}" class="comment-composer">
+        <textarea class="comment-input" value="{{commentText}}" maxlength="200" auto-height placeholder="{{isOwner ? '补充商品说明，或公开回复买家的问题' : '想了解商品细节？在这里问问卖家和同学'}}" bindinput="onCommentInput"></textarea>
         <view class="comment-submit-row"><text>{{commentText.length}} / 200</text><button class="comment-submit" loading="{{commentSubmitting}}" disabled="{{!canSubmitComment || commentSubmitting}}" bindtap="submitComment">发布评论</button></view>
       </view>
-      <view wx:elif="{{isOwner}}" class="comment-owner-tip">这里会显示买家对商品的公开评论</view>
       <view wx:for="{{comments}}" wx:key="_id" class="comment-item">
         <image src="{{item.author.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill"/>
-        <view class="comment-body"><view class="comment-meta"><view><text>{{item.author.nickName || '校园同学'}}</text><text wx:if="{{item.author.verified}}">已认证</text></view><text>{{item.createTimeFormat}}</text></view><text class="comment-content" user-select="{{true}}">{{item.content}}</text></view>
+        <view class="comment-body"><view class="comment-meta"><view><text>{{item.author.nickName || '校园同学'}}</text><text wx:if="{{item.author.isSeller}}" class="seller-comment-badge">卖家</text><text wx:elif="{{item.author.verified}}">已认证</text></view><text>{{item.createTimeFormat}}</text></view><text class="comment-content" user-select="{{true}}">{{item.content}}</text></view>
       </view>
-      <view wx:if="{{comments.length === 0}}" class="comment-empty"><text>还没有评论</text><text>{{canContact ? '你可以成为第一个提问的同学' : '买家的问题会显示在这里'}}</text></view>
+      <view wx:if="{{comments.length === 0}}" class="comment-empty"><text>还没有评论</text><text>{{isOwner ? '可以补充说明，买家的问题也会显示在这里' : '你可以成为第一个提问的同学'}}</text></view>
       <text wx:if="{{commentCount > comments.length}}" class="comment-limit-note">当前展示最近 {{comments.length}} 条评论</text>
     </view>
 
@@ -54,18 +53,20 @@
   </view>
 
   <view class="bottom-bar">
-    <view class="bar-tool pressable" bindtap="goHome">
-      <view class="tool-icon home-icon"><view class="home-roof"></view><view class="home-body"></view></view>
-      <text>首页</text>
+    <view class="bottom-utilities">
+      <view class="bar-tool pressable" role="button" aria-label="返回首页" bindtap="goHome">
+        <image class="tool-icon-image" src="/images/tabbar/home.png" mode="aspectFit"/>
+        <text>首页</text>
+      </view>
+      <button class="bar-tool share-tool pressable" aria-label="分享商品" open-type="share">
+        <image class="tool-icon-image" src="/images/detail/share.png" mode="aspectFit"/>
+        <text>分享</text>
+      </button>
+      <view wx:if="{{!isOwner}}" class="bar-tool favorite-tool pressable {{isFavorited ? 'favorited' : ''}} {{favoriteUpdating ? 'is-disabled' : ''}}" role="button" aria-label="{{isFavorited ? '取消收藏' : '收藏商品'}}" bindtap="toggleFavorite">
+        <image class="tool-icon-image" src="{{isFavorited ? '/images/detail/favorite-active.png' : '/images/detail/favorite.png'}}" mode="aspectFit"/>
+        <text>{{isFavorited ? '已收藏' : '收藏'}}</text>
+      </view>
     </view>
-    <button class="bar-tool share-tool pressable" open-type="share">
-      <view class="tool-icon share-icon"><view class="share-arrow"></view><view class="share-tray"></view></view>
-      <text>分享</text>
-    </button>
-    <button wx:if="{{!isOwner}}" class="bar-tool favorite-tool pressable {{isFavorited ? 'favorited' : ''}}" disabled="{{favoriteUpdating}}" bindtap="toggleFavorite">
-      <view class="tool-icon favorite-icon"><text>{{isFavorited ? '♥' : '♡'}}</text></view>
-      <text>{{isFavorited ? '已收藏' : '收藏'}}</text>
-    </button>
     <view wx:if="{{isOwner}}" class="owner-controls">
       <button wx:if="{{item.status === '在售'}}" class="status-action sold-action" disabled="{{updatingStatus}}" bindtap="markSold">已售出</button>
       <button wx:if="{{item.status === '在售'}}" class="status-action delist-action" disabled="{{updatingStatus}}" bindtap="delistItem">下架</button>
