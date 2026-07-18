@@ -17,10 +17,11 @@ Page({
 
   onLoad(options) {
     if (!app.requireLogin()) return;
-    const { conversationId, itemTitle } = options;
+    const { conversationId, itemTitle, draft } = options;
     this.setData({
       conversationId,
       itemTitle: decodeURIComponent(itemTitle || '聊天'),
+      inputText: draft ? decodeURIComponent(draft) : '',
       myOpenid: app.globalData.openid
     });
     wx.setNavigationBarTitle({ title: this.data.itemTitle });

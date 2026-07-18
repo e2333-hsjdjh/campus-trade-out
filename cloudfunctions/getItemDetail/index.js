@@ -26,12 +26,22 @@ exports.main = async (event) => {
     verified: !!sellerRes.data[0].verified
   } : {};
 
+  let isFavorited = false;
+  if (item._openid !== openid) {
+    const favoriteRes = await db.collection('favorites').where({
+      _openid: openid,
+      itemId
+    }).count();
+    isFavorited = favoriteRes.total > 0;
+  }
+
   // 可选：增加浏览量等
 
   const { _openid, ...publicItem } = item;
   return {
     item: publicItem,
     seller,
-    isOwner: item._openid === openid
+    isOwner: item._openid === openid,
+    isFavorited
   };
 };

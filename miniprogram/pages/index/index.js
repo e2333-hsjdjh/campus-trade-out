@@ -12,6 +12,7 @@ function formatTime(value) {
 Page({
   data: {
     statusBarHeight: 20,
+    menuSafeRight: 0,
     schoolName: '选择学校',
     selectedSchoolId: '',
     schoolModalVisible: false,
@@ -19,12 +20,12 @@ Page({
     filteredSchools: [],
     schoolSearchKey: '',
     categories: [
-      { key: '教材', icon: '书', label: '教材书籍', tone: 'blue' },
-      { key: '电子产品', icon: '电', label: '数码电子', tone: 'violet' },
-      { key: '生活用品', icon: '家', label: '宿舍生活', tone: 'orange' },
-      { key: '服饰', icon: '衣', label: '服饰穿搭', tone: 'rose' },
-      { key: '运动器材', icon: '动', label: '运动户外', tone: 'green' },
-      { key: '其他', icon: '集', label: '其他闲置', tone: 'yellow' }
+      { key: '教材', image: '/images/categories/textbook.png', label: '教材书籍' },
+      { key: '电子产品', image: '/images/categories/digital.png', label: '数码电子' },
+      { key: '生活用品', image: '/images/categories/dorm.png', label: '宿舍生活' },
+      { key: '服饰', image: '/images/categories/fashion.png', label: '服饰穿搭' },
+      { key: '运动器材', image: '/images/categories/sports.png', label: '运动户外' },
+      { key: '其他', image: '/images/categories/other.png', label: '其他闲置' }
     ],
     items: [],
     sort: 'latest',
@@ -38,8 +39,19 @@ Page({
 
   onLoad() {
     const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+    let menuSafeRight = 0;
+    try {
+      const menuRect = wx.getMenuButtonBoundingClientRect && wx.getMenuButtonBoundingClientRect();
+      if (menuRect && menuRect.left) {
+        // 品牌行与右上角胶囊处在同一高度，预留胶囊所在区域。
+        menuSafeRight = Math.max(0, windowInfo.windowWidth - menuRect.left + 8);
+      }
+    } catch (err) {
+      console.warn('无法读取胶囊按钮位置', err);
+    }
     this.setData({
       statusBarHeight: windowInfo.statusBarHeight || 20,
+      menuSafeRight,
       allSchools: app.globalData.schoolList,
       filteredSchools: app.globalData.schoolList
     });

@@ -41,8 +41,17 @@
   <view class="bottom-bar">
     <view class="bar-tool pressable" bindtap="goHome"><view>首</view><text>首页</text></view>
     <button class="bar-tool share-tool pressable" open-type="share"><view>享</view><text>分享</text></button>
-    <button wx:if="{{isOwner}}" class="primary-action owner-action" bindtap="manageItem">管理商品</button>
-    <button wx:elif="{{canContact}}" class="primary-action" loading="{{contacting}}" disabled="{{contacting}}" bindtap="wantItem">我想要 · 和 TA 聊聊</button>
+    <button wx:if="{{!isOwner}}" class="bar-tool favorite-tool pressable {{isFavorited ? 'favorited' : ''}}" disabled="{{favoriteUpdating}}" bindtap="toggleFavorite"><view>{{isFavorited ? '已' : '藏'}}</view><text>{{isFavorited ? '已收藏' : '收藏'}}</text></button>
+    <view wx:if="{{isOwner}}" class="owner-controls">
+      <button wx:if="{{item.status === '在售'}}" class="status-action sold-action" disabled="{{updatingStatus}}" bindtap="markSold">已售出</button>
+      <button wx:if="{{item.status === '在售'}}" class="status-action delist-action" disabled="{{updatingStatus}}" bindtap="delistItem">下架</button>
+      <button wx:else class="status-action relist-action" disabled="{{updatingStatus}}" bindtap="relistItem">重新上架</button>
+      <button class="owner-edit-action" disabled="{{updatingStatus}}" bindtap="editItem">编辑</button>
+    </view>
+    <view wx:elif="{{canContact}}" class="buyer-controls">
+      <button class="message-action" disabled="{{contacting}}" bindtap="leaveMessage">留言</button>
+      <button class="primary-action" disabled="{{contacting}}" bindtap="wantItem">我想要</button>
+    </view>
     <view wx:else class="primary-action disabled-action">当前商品{{item.status}}</view>
   </view>
 </view>

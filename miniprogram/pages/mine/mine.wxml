@@ -25,6 +25,7 @@
   </view>
 
   <view class="menu-card">
+    <view class="menu-row pressable" bindtap="goFavorites"><view class="menu-symbol favorite">藏</view><view class="menu-copy"><text>我的收藏</text><text>查看感兴趣的同校好物</text></view><text class="arrow">›</text></view>
     <view class="menu-row pressable" bindtap="showSafetyGuide"><view class="menu-symbol shield">安</view><view class="menu-copy"><text>安全交易指南</text><text>校内面交与防骗提醒</text></view><text class="arrow">›</text></view>
     <view class="menu-row pressable" bindtap="goEditProfile"><view class="menu-symbol profile">资</view><view class="menu-copy"><text>账号与个人资料</text><text>管理昵称、头像和联系方式</text></view><text class="arrow">›</text></view>
     <view class="menu-row pressable" bindtap="logout"><view class="menu-symbol logout">退</view><view class="menu-copy"><text>退出登录</text><text>保留当前学校浏览选择</text></view><text class="arrow">›</text></view>

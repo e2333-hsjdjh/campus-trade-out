@@ -22,6 +22,10 @@ Page({
     wx.hideLoading();
   },
 
+  editItem(e) {
+    wx.navigateTo({ url: `/pages/edit-item/edit-item?id=${e.currentTarget.dataset.id}` });
+  },
+
   async markSold(e) {
     const id = e.currentTarget.dataset.id;
     wx.showLoading({ title: '操作中' });

@@ -1,7 +1,7 @@
 <view class="page-shell">
   <view class="safe-top" style="height: {{statusBarHeight}}px"></view>
   <view class="home-header">
-    <view class="brand-row">
+    <view class="brand-row" style="padding-right: {{menuSafeRight}}px">
       <view class="brand-lockup"><view class="brand-mark">集</view><view><text class="brand-name">校园闲置</text><text class="brand-caption">同校好物 · 当面流转</text></view></view>
       <view class="school-switch pressable" bindtap="openSchoolSelector"><text>{{schoolName}}</text><text class="chevron">⌄</text></view>
     </view>
@@ -9,11 +9,13 @@
   </view>
 
   <scroll-view scroll-y class="home-scroll" style="height: calc(100vh - {{statusBarHeight}}px - 214rpx)" bindscrolltolower="loadMore" lower-threshold="120" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh">
-    <view class="category-grid">
-      <view class="category-item pressable" wx:for="{{categories}}" wx:key="key" bindtap="goCategory" data-key="{{item.key}}">
-        <view class="category-icon {{item.tone}}">{{item.icon}}</view><text>{{item.label}}</text>
+    <scroll-view scroll-x enhanced show-scrollbar="{{false}}" class="category-scroll">
+      <view class="category-row">
+        <view class="category-item pressable" wx:for="{{categories}}" wx:key="key" bindtap="goCategory" data-key="{{item.key}}">
+          <image class="category-image" src="{{item.image}}" mode="aspectFill"/><text>{{item.label}}</text>
+        </view>
       </view>
-    </view>
+    </scroll-view>
 
     <view class="notice-card pressable" bindtap="goSafetyGuide">
       <view class="notice-badge">校内限定</view>

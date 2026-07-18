@@ -13,11 +13,14 @@ Page({
     seller: null,
     schoolName: '',
     isOwner: false,
+    isFavorited: false,
     canContact: false,
     imageIndex: 0,
     loading: false,
     loadError: false,
-    contacting: false
+    contacting: false,
+    updatingStatus: false,
+    favoriteUpdating: false
   },
 
   onLoad(options) {
@@ -33,7 +36,7 @@ Page({
   },
 
   onShow() {
-    if (app.isLoggedIn() && this.data.itemId && !this.data.item && !this.data.loading && !this.data.loadError) {
+    if (app.isLoggedIn() && this.data.itemId && !this.data.loading && !this.data.loadError) {
       this.loadItemDetail();
     }
   },
@@ -55,6 +58,7 @@ Page({
         item,
         seller: result.seller || {},
         isOwner: !!result.isOwner,
+        isFavorited: !!result.isFavorited,
         canContact: !result.isOwner && item.status === '在售',
         loading: false
       });
@@ -92,11 +96,99 @@ Page({
     wx.navigateTo({ url: '/pages/safety-guide/safety-guide' });
   },
 
-  manageItem() {
-    wx.navigateTo({ url: '/pages/mine/my-items/my-items' });
+  editItem() {
+    wx.navigateTo({ url: `/pages/edit-item/edit-item?id=${this.data.itemId}` });
   },
 
-  async wantItem() {
+  async toggleFavorite() {
+    if (this.data.isOwner || this.data.favoriteUpdating) return;
+    const favorited = !this.data.isFavorited;
+    this.setData({ favoriteUpdating: true });
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'toggleFavorite',
+        data: { itemId: this.data.itemId, favorited }
+      });
+      this.setData({
+        isFavorited: !!res.result.favorited,
+        favoriteUpdating: false
+      });
+      wx.showToast({
+        title: favorited ? '已收藏' : '已取消收藏',
+        icon: 'success'
+      });
+    } catch (err) {
+      console.error('更新收藏状态失败', err);
+      const message = String((err && err.errMsg) || err);
+      wx.showToast({
+        title: message.includes('FUNCTION_NOT_FOUND') ? '请先部署收藏云函数' : '收藏操作失败',
+        icon: 'none'
+      });
+      this.setData({ favoriteUpdating: false });
+    }
+  },
+
+  markSold() {
+    this.confirmStatusChange('已售出', '标记为已售出', '确认该商品已经完成交易吗？');
+  },
+
+  delistItem() {
+    this.confirmStatusChange('已下架', '下架商品', '下架后其他同学将无法继续购买，确认下架吗？');
+  },
+
+  relistItem() {
+    this.confirmStatusChange('在售', '重新上架', '重新上架后商品会再次展示给同校同学，确认继续吗？');
+  },
+
+  confirmStatusChange(status, title, content) {
+    if (!this.data.isOwner || this.data.updatingStatus) return;
+    wx.showModal({
+      title,
+      content,
+      confirmText: '确认',
+      success: ({ confirm }) => {
+        if (confirm) this.updateItemStatus(status);
+      }
+    });
+  },
+
+  async updateItemStatus(status) {
+    if (this.data.updatingStatus) return;
+    this.setData({ updatingStatus: true });
+    wx.showLoading({ title: '正在更新' });
+    try {
+      await wx.cloud.callFunction({
+        name: 'updateItemStatus',
+        data: { itemId: this.data.itemId, status }
+      });
+      wx.hideLoading();
+      wx.showToast({
+        title: status === '在售' ? '已重新上架' : status,
+        icon: 'success'
+      });
+      this.setData({ updatingStatus: false });
+      this.loadItemDetail();
+    } catch (err) {
+      wx.hideLoading();
+      console.error('更新商品状态失败', err);
+      const message = String((err && err.errMsg) || err);
+      wx.showToast({
+        title: message.includes('FUNCTION_NOT_FOUND') ? '请先部署状态更新云函数' : '状态更新失败',
+        icon: 'none'
+      });
+      this.setData({ updatingStatus: false });
+    }
+  },
+
+  leaveMessage() {
+    this.openConversation();
+  },
+
+  wantItem() {
+    this.openConversation('你好，请问这个商品还在吗？');
+  },
+
+  async openConversation(draft = '') {
     if (!this.data.canContact || this.data.contacting) return;
     this.setData({ contacting: true });
     wx.showLoading({ title: '正在建立会话' });
@@ -107,8 +199,9 @@ Page({
       });
       const conversationId = res.result.conversationId;
       wx.hideLoading();
+      const draftQuery = draft ? `&draft=${encodeURIComponent(draft)}` : '';
       wx.navigateTo({
-        url: `/pages/chat/chat?conversationId=${conversationId}&itemTitle=${encodeURIComponent(this.data.item.title)}`
+        url: `/pages/chat/chat?conversationId=${conversationId}&itemTitle=${encodeURIComponent(this.data.item.title)}${draftQuery}`
       });
     } catch (err) {
       wx.hideLoading();

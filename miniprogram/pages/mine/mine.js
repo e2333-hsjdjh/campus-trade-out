@@ -46,7 +46,11 @@ Page({
   },
 
   goChatList() {
-    wx.navigateTo({ url: '/pages/chat-list/chat-list' });
+    wx.switchTab({ url: '/pages/chat-list/chat-list' });
+  },
+
+  goFavorites() {
+    wx.navigateTo({ url: '/pages/mine/favorites/favorites' });
   },
 
   goEditProfile() {

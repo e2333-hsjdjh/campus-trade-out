@@ -23,6 +23,7 @@ page {
   line-height: 1.45;
 }
 
+button { box-sizing: border-box; font-family: inherit; }
 button::after { border: 0; }
 
 .card {
