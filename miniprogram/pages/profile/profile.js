@@ -8,7 +8,6 @@ Page({
   },
 
   onLoad() {
-    if (!app.requireLogin()) return;
     const user = app.globalData.userInfo || {};
     this.setData({
       avatarUrl: user.avatarUrl || '',
@@ -57,7 +56,7 @@ Page({
         }
       });
       if (res.result.success) {
-        app.saveLoginState(app.globalData.openid, res.result.user);
+        app.globalData.userInfo = res.result.user;
         wx.showToast({ title: '保存成功', icon: 'success' });
         setTimeout(() => {
           wx.navigateBack();

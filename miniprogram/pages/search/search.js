@@ -3,27 +3,11 @@ const app = getApp();
 Page({
   data: {
     keyword: '',
-    items: [],
-    searched: false
-  },
-
-  onLoad(options) {
-    if (!app.requireLogin()) return;
-    const keyword = decodeURIComponent(options.keyword || '');
-    if (keyword) {
-      this.setData({ keyword });
-      this.doSearch();
-    }
+    items: []
   },
 
   onInput(e) {
     this.setData({ keyword: e.detail.value });
-  },
-
-  useSuggestion(e) {
-    const keyword = e.currentTarget.dataset.keyword;
-    this.setData({ keyword });
-    this.doSearch();
   },
 
   async doSearch() {
@@ -36,14 +20,12 @@ Page({
         name: 'getItems',
         data: { keyword, skip: 0, limit: 20 }
       });
-      this.setData({ items: res.result.items || [], searched: true });
+      this.setData({ items: res.result.items });
     } catch (err) {
       console.error('搜索失败', err);
-      this.setData({ searched: true });
       wx.showToast({ title: '搜索失败', icon: 'none' });
-    } finally {
-      wx.hideLoading();
     }
+    wx.hideLoading();
   },
 
   goDetail(e) {

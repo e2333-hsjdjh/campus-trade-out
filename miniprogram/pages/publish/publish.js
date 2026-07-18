@@ -14,10 +14,6 @@ Page({
     canSubmit: false
   },
 
-  onShow() {
-    app.requireLogin('/pages/publish/publish');
-  },
-
   // 选择图片
   chooseImage() {
     const remain = 9 - this.data.images.length;

@@ -5,9 +5,7 @@ const db = cloud.database();
 exports.main = async (event) => {
   const wxContext = cloud.getWXContext();
   const myOpenid = wxContext.OPENID;
-  const { conversationId, afterTime } = event;
-  const skip = Math.max(0, Number(event.skip) || 0);
-  const limit = Math.min(50, Math.max(1, Number(event.limit) || 20));
+  const { conversationId, skip = 0, limit = 20 } = event;
 
   // 校验权限：必须是会话参与者
   const convRes = await db.collection('conversations').doc(conversationId).get();
@@ -15,16 +13,10 @@ exports.main = async (event) => {
     throw new Error('无权访问此会话');
   }
 
-  const where = { conversationId };
-  if (afterTime) {
-    const afterDate = new Date(afterTime);
-    if (!Number.isNaN(afterDate.getTime())) where.createTime = db.command.gt(afterDate);
-  }
-
   const msgs = await db.collection('messages')
-    .where(where)
+    .where({ conversationId })
     .orderBy('createTime', 'asc')
-    .skip(afterTime ? 0 : skip)
+    .skip(skip)
     .limit(limit)
     .get();
 

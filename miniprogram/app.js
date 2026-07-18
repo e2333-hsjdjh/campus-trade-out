@@ -6,7 +6,7 @@ App({
   onLaunch() {
     // 1. 初始化云开发
     wx.cloud.init({
-      env: 'cloud1-d8gctnpc38f1b09ce',
+      env: 'your-cloud-env-id',  // 请替换为你的真实云环境 ID
       traceUser: true,
     });
 
@@ -15,10 +15,10 @@ App({
       userInfo: null,
       openid: null,
       schoolId: null,
-      browseSchoolId: null,
-      schoolPromptShown: false,
       schoolList: [
-        { id: 'ruc_suzhou', name: '中国人民大学苏州校区' },
+        { id: 'sc001', name: 'XX大学' },
+        { id: 'sc002', name: 'YY学院' },
+        { id: 'sc003', name: 'ZZ职业技术学院' },
       ]
     };
 
@@ -31,23 +31,11 @@ App({
     try {
       const openid = wx.getStorageSync('openid');
       const userInfo = wx.getStorageSync('userInfo');
-      const browseSchoolId = wx.getStorageSync('browseSchoolId');
-      const defaultSchool = this.globalData.schoolList[0];
-      const validBrowseSchool = this.globalData.schoolList.some(item => item.id === browseSchoolId);
-      this.globalData.browseSchoolId = validBrowseSchool ? browseSchoolId : defaultSchool.id;
-      if (!validBrowseSchool) wx.setStorageSync('browseSchoolId', defaultSchool.id);
-
-      const validUserSchool = userInfo && this.globalData.schoolList.some(item => item.id === userInfo.schoolId);
-      if (openid && userInfo && validUserSchool) {
+      if (openid && userInfo) {
         this.globalData.openid = openid;
         this.globalData.userInfo = userInfo;
         this.globalData.schoolId = userInfo.schoolId;
-        this.globalData.browseSchoolId = userInfo.schoolId;
         console.log('登录状态已恢复', openid);
-      } else if (openid || userInfo) {
-        wx.removeStorageSync('openid');
-        wx.removeStorageSync('userInfo');
-        console.log('旧学校登录态已清理，请重新登录绑定当前校区');
       }
     } catch (e) {
       console.error('恢复登录状态失败', e);
@@ -59,11 +47,9 @@ App({
     try {
       wx.setStorageSync('openid', openid);
       wx.setStorageSync('userInfo', userInfo);
-      wx.setStorageSync('browseSchoolId', userInfo.schoolId);
       this.globalData.openid = openid;
       this.globalData.userInfo = userInfo;
       this.globalData.schoolId = userInfo.schoolId;
-      this.globalData.browseSchoolId = userInfo.schoolId;
       console.log('登录状态已保存');
     } catch (e) {
       console.error('保存登录状态失败', e);
@@ -85,29 +71,5 @@ App({
 
   isLoggedIn() {
     return !!this.globalData.openid;
-  },
-
-  selectBrowseSchool(schoolId) {
-    const school = this.globalData.schoolList.find(item => item.id === schoolId);
-    if (!school) return null;
-    this.globalData.browseSchoolId = schoolId;
-    this.globalData.schoolPromptShown = true;
-    wx.setStorageSync('browseSchoolId', schoolId);
-    return school;
-  },
-
-  getBrowseSchool() {
-    const schoolId = this.globalData.schoolId || this.globalData.browseSchoolId;
-    return this.globalData.schoolList.find(item => item.id === schoolId) || null;
-  },
-
-  requireLogin(redirect = '') {
-    if (this.isLoggedIn()) return true;
-    const pages = getCurrentPages();
-    const current = pages[pages.length - 1];
-    if (current && current.route === 'pages/login/login') return false;
-    const suffix = redirect ? `?redirect=${encodeURIComponent(redirect)}` : '';
-    wx.navigateTo({ url: `/pages/login/login${suffix}` });
-    return false;
   }
 });
