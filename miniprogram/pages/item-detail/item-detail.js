@@ -6,6 +6,25 @@ function formatDate(value) {
   return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+function formatCommentTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '刚刚';
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  if (diff >= 0 && diff < 60 * 1000) return '刚刚';
+  if (diff >= 0 && diff < 60 * 60 * 1000) return `${Math.floor(diff / 60000)}分钟前`;
+  if (diff >= 0 && diff < 24 * 60 * 60 * 1000) return `${Math.floor(diff / 3600000)}小时前`;
+  if (date.getFullYear() === now.getFullYear()) return `${date.getMonth() + 1}月${date.getDate()}日`;
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
+function formatComments(comments) {
+  return (Array.isArray(comments) ? comments : []).map(comment => ({
+    ...comment,
+    createTimeFormat: formatCommentTime(comment.createTime)
+  }));
+}
+
 Page({
   data: {
     itemId: '',
@@ -20,7 +39,12 @@ Page({
     loadError: false,
     contacting: false,
     updatingStatus: false,
-    favoriteUpdating: false
+    favoriteUpdating: false,
+    comments: [],
+    commentCount: 0,
+    commentText: '',
+    canSubmitComment: false,
+    commentSubmitting: false
   },
 
   onLoad(options) {
@@ -60,6 +84,8 @@ Page({
         isOwner: !!result.isOwner,
         isFavorited: !!result.isFavorited,
         canContact: !result.isOwner && item.status === '在售',
+        comments: formatComments(result.comments),
+        commentCount: Number(result.commentCount || 0),
         loading: false
       });
       wx.setNavigationBarTitle({ title: item.title || '商品详情' });
@@ -213,6 +239,44 @@ Page({
       });
     } finally {
       this.setData({ contacting: false });
+    }
+  },
+
+  onCommentInput(e) {
+    const commentText = e.detail.value || '';
+    this.setData({
+      commentText,
+      canSubmitComment: !!commentText.trim()
+    });
+  },
+
+  async submitComment() {
+    const content = this.data.commentText.trim();
+    if (!this.data.canContact || !content || this.data.commentSubmitting) return;
+    this.setData({ commentSubmitting: true });
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'addItemComment',
+        data: { itemId: this.data.itemId, content }
+      });
+      const comment = res.result && res.result.comment;
+      if (!comment) throw new Error('评论发布失败');
+      this.setData({
+        comments: [formatComments([comment])[0], ...this.data.comments],
+        commentCount: this.data.commentCount + 1,
+        commentText: '',
+        canSubmitComment: false,
+        commentSubmitting: false
+      });
+      wx.showToast({ title: '评论已发布', icon: 'success' });
+    } catch (err) {
+      console.error('发布评论失败', err);
+      const message = String((err && err.errMsg) || err);
+      let title = '评论发布失败';
+      if (message.includes('FUNCTION_NOT_FOUND')) title = '请先部署评论云函数';
+      if (message.includes('itemComments') || message.includes('DATABASE_COLLECTION_NOT_EXIST')) title = '请先创建评论集合';
+      wx.showToast({ title, icon: 'none' });
+      this.setData({ commentSubmitting: false });
     }
   },
 

@@ -26,10 +26,25 @@
       <view class="description"><text>详细描述</text><text user-select="{{true}}">{{item.description || '卖家暂未补充更多描述，可以点击下方按钮进一步沟通。'}}</text></view>
     </view>
 
-    <view class="seller-card">
+    <view class="seller-card {{canContact ? 'pressable contactable' : ''}}" bindtap="leaveMessage">
       <image class="seller-avatar" src="{{seller.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill"/>
       <view class="seller-copy"><view><text class="seller-name">{{seller.nickName || '校园同学'}}</text><text wx:if="{{seller.verified}}" class="verified">已认证</text></view><text>{{schoolName || '本校'}}同学 · 仅展示公开资料</text></view>
-      <view class="seller-badge">校友</view>
+      <view class="seller-badge">{{canContact ? '去聊天 ›' : '校友'}}</view>
+    </view>
+
+    <view class="comment-card">
+      <view class="comment-heading"><view><text>同学评论</text><text>{{commentCount}}</text></view><text>公开留言</text></view>
+      <view wx:if="{{canContact}}" class="comment-composer">
+        <textarea class="comment-input" value="{{commentText}}" maxlength="200" auto-height placeholder="想了解商品细节？在这里问问卖家和同学" bindinput="onCommentInput"></textarea>
+        <view class="comment-submit-row"><text>{{commentText.length}} / 200</text><button class="comment-submit" loading="{{commentSubmitting}}" disabled="{{!canSubmitComment || commentSubmitting}}" bindtap="submitComment">发布评论</button></view>
+      </view>
+      <view wx:elif="{{isOwner}}" class="comment-owner-tip">这里会显示买家对商品的公开评论</view>
+      <view wx:for="{{comments}}" wx:key="_id" class="comment-item">
+        <image src="{{item.author.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill"/>
+        <view class="comment-body"><view class="comment-meta"><view><text>{{item.author.nickName || '校园同学'}}</text><text wx:if="{{item.author.verified}}">已认证</text></view><text>{{item.createTimeFormat}}</text></view><text class="comment-content" user-select="{{true}}">{{item.content}}</text></view>
+      </view>
+      <view wx:if="{{comments.length === 0}}" class="comment-empty"><text>还没有评论</text><text>{{canContact ? '你可以成为第一个提问的同学' : '买家的问题会显示在这里'}}</text></view>
+      <text wx:if="{{commentCount > comments.length}}" class="comment-limit-note">当前展示最近 {{comments.length}} 条评论</text>
     </view>
 
     <view class="promise-card"><view class="promise-icon">验</view><view><text>当面验货，再确认交易</text><text>建议在教学楼、食堂等校内公共区域见面</text></view></view>
@@ -39,9 +54,18 @@
   </view>
 
   <view class="bottom-bar">
-    <view class="bar-tool pressable" bindtap="goHome"><view>首</view><text>首页</text></view>
-    <button class="bar-tool share-tool pressable" open-type="share"><view>享</view><text>分享</text></button>
-    <button wx:if="{{!isOwner}}" class="bar-tool favorite-tool pressable {{isFavorited ? 'favorited' : ''}}" disabled="{{favoriteUpdating}}" bindtap="toggleFavorite"><view>{{isFavorited ? '已' : '藏'}}</view><text>{{isFavorited ? '已收藏' : '收藏'}}</text></button>
+    <view class="bar-tool pressable" bindtap="goHome">
+      <view class="tool-icon home-icon"><view class="home-roof"></view><view class="home-body"></view></view>
+      <text>首页</text>
+    </view>
+    <button class="bar-tool share-tool pressable" open-type="share">
+      <view class="tool-icon share-icon"><view class="share-arrow"></view><view class="share-tray"></view></view>
+      <text>分享</text>
+    </button>
+    <button wx:if="{{!isOwner}}" class="bar-tool favorite-tool pressable {{isFavorited ? 'favorited' : ''}}" disabled="{{favoriteUpdating}}" bindtap="toggleFavorite">
+      <view class="tool-icon favorite-icon"><text>{{isFavorited ? '♥' : '♡'}}</text></view>
+      <text>{{isFavorited ? '已收藏' : '收藏'}}</text>
+    </button>
     <view wx:if="{{isOwner}}" class="owner-controls">
       <button wx:if="{{item.status === '在售'}}" class="status-action sold-action" disabled="{{updatingStatus}}" bindtap="markSold">已售出</button>
       <button wx:if="{{item.status === '在售'}}" class="status-action delist-action" disabled="{{updatingStatus}}" bindtap="delistItem">下架</button>

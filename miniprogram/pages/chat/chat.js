@@ -7,21 +7,27 @@ Page({
     myOpenid: '',
     messages: [],
     inputText: '',
+    canSend: false,
+    sending: false,
     scrollToView: '',
     loadingMore: false,
     skip: 0,
     limit: 20,
     hasMore: true,
-    watcher: null   // 保存实时监听实例，页面卸载时关闭
+    watcher: null,
+    lastMessageTime: '',
+    pollingNew: false
   },
 
   onLoad(options) {
     if (!app.requireLogin()) return;
     const { conversationId, itemTitle, draft } = options;
+    const inputText = draft ? decodeURIComponent(draft) : '';
     this.setData({
       conversationId,
       itemTitle: decodeURIComponent(itemTitle || '聊天'),
-      inputText: draft ? decodeURIComponent(draft) : '',
+      inputText,
+      canSend: !!inputText.trim(),
       myOpenid: app.globalData.openid
     });
     wx.setNavigationBarTitle({ title: this.data.itemTitle });
@@ -47,6 +53,7 @@ Page({
     if (this.data.watcher) {
       this.data.watcher.close();
     }
+    if (this.pollTimer) clearInterval(this.pollTimer);
   },
 
   // 加载历史消息
@@ -67,12 +74,14 @@ Page({
         msg.createTimeFormat = this.formatTime(msg.createTime);
       });
       const hasMore = newMsgs.length === this.data.limit;
+      const newest = newMsgs[newMsgs.length - 1];
       // 新消息插入到数组头部
       this.setData({
         messages: [...newMsgs, ...this.data.messages],
         skip: this.data.skip + newMsgs.length,
         hasMore,
-        loadingMore: false
+        loadingMore: false,
+        lastMessageTime: newest ? newest.createTime : this.data.lastMessageTime
       });
       // 如果没有历史消息，不需要滚动
     } catch (err) {
@@ -88,13 +97,14 @@ Page({
 
   // 开始实时监听新消息
   startWatch() {
-    const db = wx.cloud.database();
-    const watcher = db.collection('messages')
-      .where({
-        conversationId: this.data.conversationId
-      })
-      .orderBy('createTime', 'asc')
-      .watch({
+    try {
+      const db = wx.cloud.database();
+      const watcher = db.collection('messages')
+        .where({
+          conversationId: this.data.conversationId
+        })
+        .orderBy('createTime', 'asc')
+        .watch({
         onChange: (snapshot) => {
           if (snapshot.type === 'init') {
             // 初始化数据由 getMessages 加载，这里不处理
@@ -112,7 +122,8 @@ Page({
                 if (!this.data.messages.some(m => m._id === newMsg._id)) {
                   this.setData({
                     messages: [...this.data.messages, newMsg],
-                    scrollToView: `msg-${newMsg._id}`
+                    scrollToView: `msg-${newMsg._id}`,
+                    lastMessageTime: newMsg.createTime
                   });
                 }
               }
@@ -121,33 +132,85 @@ Page({
         },
         onError: (err) => {
           console.error('监听失败', err);
+          this.startPolling();
         }
       });
-    this.setData({ watcher });
+      this.setData({ watcher });
+    } catch (err) {
+      console.error('启动监听失败', err);
+      this.startPolling();
+    }
+  },
+
+  startPolling() {
+    if (this.pollTimer) return;
+    this.pollTimer = setInterval(() => this.loadNewMessages(), 3000);
+  },
+
+  async loadNewMessages() {
+    if (this.data.pollingNew) return;
+    this.setData({ pollingNew: true });
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'getMessages',
+        data: {
+          conversationId: this.data.conversationId,
+          afterTime: this.data.lastMessageTime || new Date(0).toISOString(),
+          limit: 50
+        }
+      });
+      const knownIds = new Set(this.data.messages.map(item => item._id));
+      const newMessages = (res.result.messages || []).filter(item => !knownIds.has(item._id));
+      newMessages.forEach(item => { item.createTimeFormat = this.formatTime(item.createTime); });
+      const newest = newMessages[newMessages.length - 1];
+      if (newMessages.length > 0) {
+        this.setData({
+          messages: this.data.messages.concat(newMessages),
+          scrollToView: `msg-${newest._id}`,
+          lastMessageTime: newest.createTime
+        });
+        this.markRead();
+      }
+    } catch (err) {
+      console.error('轮询新消息失败', err);
+    } finally {
+      this.setData({ pollingNew: false });
+    }
   },
 
   // 输入事件
   onInput(e) {
-    this.setData({ inputText: e.detail.value });
+    const inputText = e.detail.value;
+    this.setData({ inputText, canSend: !!inputText.trim() });
   },
 
   // 发送消息
   async sendMsg() {
     const text = this.data.inputText.trim();
-    if (!text) return;
+    if (!text || this.data.sending) return;
 
-    this.setData({ inputText: '' });
+    this.setData({ sending: true });
     try {
-      await wx.cloud.callFunction({
+      const res = await wx.cloud.callFunction({
         name: 'sendMessage',
         data: {
           conversationId: this.data.conversationId,
           content: text
         }
       });
-      // 消息通过 watch 自动推入，无需手动添加
+      const message = res.result.message;
+      if (message && !this.data.messages.some(item => item._id === message._id)) {
+        message.createTimeFormat = this.formatTime(message.createTime);
+        this.setData({
+          messages: this.data.messages.concat(message),
+          scrollToView: `msg-${message._id}`,
+          lastMessageTime: message.createTime
+        });
+      }
+      this.setData({ inputText: '', canSend: false, sending: false });
     } catch (err) {
       console.error('发送失败', err);
+      this.setData({ sending: false });
       wx.showToast({ title: '发送失败', icon: 'none' });
     }
   },
@@ -178,8 +241,7 @@ Page({
       });
       app.globalData.userInfo.wechatId = wechatId;
     }
-    this.setData({ inputText: `我的微信号：${wechatId}` });
-    this.sendMsg();
+    this.setData({ inputText: `我的微信号：${wechatId}`, canSend: true }, () => this.sendMsg());
   },
 
   // 时间格式化辅助

@@ -7,7 +7,9 @@ exports.main = async (event) => {
   const senderOpenid = wxContext.OPENID;
   const { conversationId, content } = event;
 
+  if (!conversationId) throw new Error('缺少会话ID');
   if (!content || !content.trim()) throw new Error('消息不能为空');
+  if (content.trim().length > 500) throw new Error('消息不能超过500字');
 
   // 验证发送者是否属于该会话
   const convRes = await db.collection('conversations').doc(conversationId).get();
@@ -39,5 +41,8 @@ exports.main = async (event) => {
     }
   });
 
-  return { msgId: messageRes._id };
+  return {
+    msgId: messageRes._id,
+    message: { _id: messageRes._id, ...msg }
+  };
 };

@@ -35,6 +35,25 @@ exports.main = async (event) => {
     isFavorited = favoriteRes.total > 0;
   }
 
+  let comments = [];
+  let commentCount = 0;
+  try {
+    const [commentRes, countRes] = await Promise.all([
+      db.collection('itemComments').where({ itemId }).limit(100).get(),
+      db.collection('itemComments').where({ itemId }).count()
+    ]);
+    comments = commentRes.data
+      .sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime())
+      .slice(0, 30)
+      .map(({ _openid: commentOpenid, ...comment }) => comment);
+    commentCount = countRes.total;
+  } catch (err) {
+    const message = String((err && (err.errMsg || err.message)) || err);
+    if (!message.includes('DATABASE_COLLECTION_NOT_EXIST') && !message.includes('Db or Table not exist')) {
+      throw err;
+    }
+  }
+
   // 可选：增加浏览量等
 
   const { _openid, ...publicItem } = item;
@@ -42,6 +61,8 @@ exports.main = async (event) => {
     item: publicItem,
     seller,
     isOwner: item._openid === openid,
-    isFavorited
+    isFavorited,
+    comments,
+    commentCount
   };
 };
